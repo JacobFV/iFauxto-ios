@@ -148,28 +148,29 @@ struct FolderOverlayView: View {
                 VStack(spacing: 0) {
                     Rectangle()
                         .fill(.ultraThinMaterial)
-                        .frame(height: geometry.safeAreaInsets.top + 200)
+                        .frame(height: 250)
                         .mask(
                             LinearGradient(
                                 stops: [
                                     .init(color: .black, location: 0),
-                                    .init(color: .black, location: 0.3),
+                                    .init(color: .black, location: 0.35),
                                     .init(color: .black.opacity(0), location: 1.0)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
-                        .overlay(alignment: .bottomLeading) {
+                        .overlay(alignment: .topLeading) {
                             Text(folder.name)
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .padding(.horizontal, 20)
-                                .padding(.bottom, 20)
+                                .padding(.top, geometry.safeAreaInsets.top + 16)
                         }
 
                     Spacer()
                 }
+                .ignoresSafeArea()
                 .opacity(animationProgress)
             }
         }
