@@ -79,20 +79,22 @@ struct FolderDetailView: View {
                 addPhotos(identifiers: identifiers)
             }
         }
-        .sheet(isPresented: $showingEditSheet) {
+        .fullScreenCover(isPresented: $showingEditSheet) {
             FolderEditSheet(mode: .edit(folder.name)) { newName in
                 folder.name = newName
                 folder.updatedAt = Date()
             }
+            .presentationBackground(.clear)
         }
         .sheet(item: $selectedAsset) { asset in
             PhotoDetailView(asset: asset, folder: folder)
         }
-        .sheet(isPresented: $showingCreateSubfolderSheet) {
+        .fullScreenCover(isPresented: $showingCreateSubfolderSheet) {
             FolderEditSheet(mode: .create) { name in
                 createSubfolder(name: name, photoIds: pendingSubfolderPhotoIds)
                 pendingSubfolderPhotoIds = []
             }
+            .presentationBackground(.clear)
         }
     }
 

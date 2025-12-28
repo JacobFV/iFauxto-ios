@@ -52,16 +52,18 @@ struct HomeView: View {
         .task {
             await loadContent()
         }
-        .sheet(isPresented: $showingNewFolder) {
+        .fullScreenCover(isPresented: $showingNewFolder) {
             FolderEditSheet(mode: .create) { name in
                 createFolder(name: name)
             }
+            .presentationBackground(.clear)
         }
-        .sheet(isPresented: $showingCreateFolderSheet) {
+        .fullScreenCover(isPresented: $showingCreateFolderSheet) {
             FolderEditSheet(mode: .create) { name in
                 createFolderFromPhotos(name: name, photoIds: pendingFolderPhotoIds)
                 pendingFolderPhotoIds = []
             }
+            .presentationBackground(.clear)
         }
         .sheet(item: $selectedAsset) { asset in
             PhotoDetailView(asset: asset, folder: nil)

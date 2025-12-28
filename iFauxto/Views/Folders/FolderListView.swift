@@ -64,10 +64,11 @@ struct FolderListView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingNewFolder) {
+        .fullScreenCover(isPresented: $showingNewFolder) {
             FolderEditSheet(mode: .create) { name in
                 createFolder(name: name)
             }
+            .presentationBackground(.clear)
         }
         .alert("Delete Folder?", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {

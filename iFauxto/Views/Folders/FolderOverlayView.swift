@@ -11,8 +11,6 @@ struct FolderOverlayView: View {
 
     @State private var photoService = PhotoLibraryService.shared
     @State private var selectedAsset: PHAsset?
-    @State private var showingPhotoPicker = false
-    @State private var showingEditSheet = false
     @State private var animationProgress: CGFloat = 0
     @State private var selectedSubfolder: Folder?
     @State private var subfolderOrigin: CGPoint = .zero
@@ -41,22 +39,25 @@ struct FolderOverlayView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Full screen tap target for dismissal
+                // Blur background
                 Rectangle()
                     .fill(.ultraThinMaterial)
                     .opacity(animationProgress)
                     .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        dismiss()
-                    }
 
-                // Content area with tap-to-dismiss on empty regions
+                // Content
                 VStack(spacing: 0) {
-                    // Header
-                    headerView
-                        .opacity(animationProgress)
-                        .offset(y: (1 - animationProgress) * -50)
+                    // Header with folder name
+                    HStack {
+                        Text(folder.name)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, geometry.safeAreaInsets.top + 16)
+                    .padding(.bottom, 16)
+                    .opacity(animationProgress)
 
                     // Grid of items
                     ScrollView {
@@ -77,11 +78,13 @@ struct FolderOverlayView: View {
                                         .delay(Double(index) * 0.03),
                                         value: animationProgress
                                     )
-                                    .onTapGesture {
-                                        let pos = gridPosition(for: index, in: geometry)
-                                        subfolderOrigin = CGPoint(x: pos.x + 60, y: pos.y + 200)
-                                        selectedSubfolder = subfolder
-                                    }
+                                    .highPriorityGesture(
+                                        TapGesture().onEnded {
+                                            let pos = gridPosition(for: index, in: geometry)
+                                            subfolderOrigin = CGPoint(x: pos.x + 60, y: pos.y + 200)
+                                            selectedSubfolder = subfolder
+                                        }
+                                    )
                             }
 
                             // Photos
@@ -107,11 +110,13 @@ struct FolderOverlayView: View {
                                     .delay(Double(adjustedIndex) * 0.03),
                                     value: animationProgress
                                 )
-                                .onTapGesture {
-                                    if let asset = photoService.fetchAsset(identifier: folderAsset.assetIdentifier) {
-                                        selectedAsset = asset
+                                .highPriorityGesture(
+                                    TapGesture().onEnded {
+                                        if let asset = photoService.fetchAsset(identifier: folderAsset.assetIdentifier) {
+                                            selectedAsset = asset
+                                        }
                                     }
-                                }
+                                )
                                 .draggable(folderAsset.assetIdentifier) {
                                     OverlayPhotoCell(assetIdentifier: folderAsset.assetIdentifier, isDragging: false, dropZone: .none)
                                         .frame(width: 80, height: 80)
@@ -144,44 +149,29 @@ struct FolderOverlayView: View {
                             }
                         }
                         .padding(.horizontal, 20)
-                        .padding(.top, 20)
                         .padding(.bottom, 100)
                     }
-                    .background(
-                        Color.white.opacity(0.001)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                dismiss()
-                            }
-                    )
                 }
-                .allowsHitTesting(true)
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            dismiss()
         }
         .onAppear {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                 animationProgress = 1
             }
         }
-        .sheet(isPresented: $showingPhotoPicker) {
-            PhotoPickerView { identifiers in
-                addPhotos(identifiers: identifiers)
-            }
-        }
-        .sheet(isPresented: $showingEditSheet) {
-            FolderEditSheet(mode: .edit(folder.name)) { newName in
-                folder.name = newName
-                folder.updatedAt = Date()
-            }
-        }
         .sheet(item: $selectedAsset) { asset in
             PhotoDetailView(asset: asset, folder: folder)
         }
-        .sheet(isPresented: $showingCreateSubfolderSheet) {
+        .fullScreenCover(isPresented: $showingCreateSubfolderSheet) {
             FolderEditSheet(mode: .create) { name in
                 createSubfolder(name: name, photoIds: pendingSubfolderPhotoIds)
                 pendingSubfolderPhotoIds = []
             }
+            .presentationBackground(.clear)
         }
         .overlay {
             if let subfolder = selectedSubfolder {
@@ -195,55 +185,6 @@ struct FolderOverlayView: View {
                 )
             }
         }
-    }
-
-    private var headerView: some View {
-        HStack {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Text(folder.name)
-                .font(.headline)
-
-            Spacer()
-
-            Menu {
-                Button {
-                    showingPhotoPicker = true
-                } label: {
-                    Label("Add Photos", systemImage: "plus")
-                }
-
-                Button {
-                    showingEditSheet = true
-                } label: {
-                    Label("Rename", systemImage: "pencil")
-                }
-
-                Button {
-                    folder.isFavorite.toggle()
-                } label: {
-                    Label(
-                        folder.isFavorite ? "Unfavorite" : "Favorite",
-                        systemImage: folder.isFavorite ? "heart.slash" : "heart"
-                    )
-                }
-            } label: {
-                Image(systemName: "ellipsis.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 60)
-        .padding(.bottom, 16)
     }
 
     // Calculate where each grid item should be
@@ -274,22 +215,6 @@ struct FolderOverlayView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             isPresented = false
         }
-    }
-
-    private func addPhotos(identifiers: [String]) {
-        let maxSortOrder = folder.safeAssets.map(\.sortOrder).max() ?? -1
-
-        for (index, identifier) in identifiers.enumerated() {
-            let existing = folder.safeAssets.first { $0.assetIdentifier == identifier }
-            if existing == nil {
-                let asset = FolderAsset(assetIdentifier: identifier, sortOrder: maxSortOrder + index + 1)
-                asset.folder = folder
-                modelContext.insert(asset)
-            }
-        }
-
-        folder.updatedAt = Date()
-        triggerHaptic()
     }
 
     private func reorderAssetLive(source: FolderAsset, target: FolderAsset, insertBefore: Bool) {

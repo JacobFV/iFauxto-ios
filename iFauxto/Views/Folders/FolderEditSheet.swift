@@ -7,7 +7,7 @@ enum FolderEditMode {
     var title: String {
         switch self {
         case .create: return "New Folder"
-        case .edit: return "Rename Folder"
+        case .edit: return "Rename"
         }
     }
 
@@ -41,36 +41,62 @@ struct FolderEditSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Folder name", text: $name)
-                        .focused($isNameFocused)
-                } footer: {
-                    Text("Give your folder a name that makes sense to YOU. We won't rename it to \"Recents\" or \"Favorites\" without asking.")
+        VStack(spacing: 20) {
+            Text(mode.title)
+                .font(.title3.weight(.semibold))
+
+            TextField("Folder name", text: $name)
+                .padding(14)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .focused($isNameFocused)
+                .onSubmit {
+                    save()
                 }
-            }
-            .navigationTitle(mode.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+
+            HStack(spacing: 12) {
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(mode.buttonLabel) {
-                        onSave(name.trimmingCharacters(in: .whitespacesAndNewlines))
-                        dismiss()
-                    }
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .foregroundStyle(.primary)
+                .background(Color(.systemGray5))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                Button {
+                    save()
+                } label: {
+                    Text(mode.buttonLabel)
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
                 }
-            }
-            .onAppear {
-                isNameFocused = true
+                .foregroundStyle(.white)
+                .background(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.accentColor)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        .presentationDetents([.medium])
+        .padding(24)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .shadow(color: .black.opacity(0.2), radius: 30, y: 10)
+        .padding(.horizontal, 32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.4).ignoresSafeArea())
+        .onAppear {
+            isNameFocused = true
+        }
+    }
+
+    private func save() {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        onSave(trimmed)
+        dismiss()
     }
 }
 
