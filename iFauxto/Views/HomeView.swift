@@ -348,9 +348,13 @@ struct HomeView: View {
 
                 Spacer()
 
-                Text("Last 7 days")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                NavigationLink {
+                    AllPhotosView()
+                } label: {
+                    Text("See All")
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
+                }
             }
 
             if recentPhotos.isEmpty {
