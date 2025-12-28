@@ -144,34 +144,33 @@ struct FolderOverlayView: View {
                     }
                     .scrollClipDisabled()
 
-                // Header overlay - floats on top with feathered bottom
-                VStack(spacing: 0) {
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-                        .frame(height: 250)
-                        .mask(
-                            LinearGradient(
-                                stops: [
-                                    .init(color: .black, location: 0),
-                                    .init(color: .black, location: 0.35),
-                                    .init(color: .black.opacity(0), location: 1.0)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
+                // Header - solid top fading to transparent
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(.systemBackground), location: 0),
+                                .init(color: Color(.systemBackground), location: 0.5),
+                                .init(color: Color(.systemBackground).opacity(0), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
-                        .overlay(alignment: .topLeading) {
-                            Text(folder.name)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal, 20)
-                                .padding(.top, geometry.safeAreaInsets.top + 16)
-                        }
+                    )
+                    .frame(height: 200)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .ignoresSafeArea()
+                    .opacity(animationProgress)
 
-                    Spacer()
-                }
-                .ignoresSafeArea()
-                .opacity(animationProgress)
+                // Header title - aligned with settings button
+                Text(folder.name)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(.leading, 20)
+                    .padding(.top, 68) // Align with settings button center
+                    .ignoresSafeArea()
+                    .opacity(animationProgress)
             }
         }
         .contentShape(Rectangle())
