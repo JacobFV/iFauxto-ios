@@ -43,7 +43,13 @@ struct FolderOverlayView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Blur background
+                // Solid background to hide underlying UI (search bar, etc)
+                Rectangle()
+                    .fill(Color(.systemBackground))
+                    .opacity(animationProgress * 0.95)
+                    .ignoresSafeArea()
+
+                // Blur background on top
                 Rectangle()
                     .fill(.ultraThinMaterial)
                     .opacity(animationProgress)
@@ -144,33 +150,36 @@ struct FolderOverlayView: View {
                     }
                     .scrollClipDisabled()
 
-                // Header - solid top fading to transparent
+                // Header blur - feathered bottom, more opaque to hide underlying UI
                 Rectangle()
-                    .fill(
+                    .fill(.regularMaterial)
+                    .frame(height: 280)
+                    .mask(
                         LinearGradient(
                             stops: [
-                                .init(color: Color(.systemBackground), location: 0),
-                                .init(color: Color(.systemBackground), location: 0.5),
-                                .init(color: Color(.systemBackground).opacity(0), location: 1.0)
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: 0.4),
+                                .init(color: .black.opacity(0), location: 1.0)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 200)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .ignoresSafeArea()
                     .opacity(animationProgress)
 
                 // Header title - aligned with settings button
-                Text(folder.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .padding(.leading, 20)
-                    .padding(.top, 68) // Align with settings button center
-                    .ignoresSafeArea()
-                    .opacity(animationProgress)
+                VStack {
+                    Text(folder.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                    Spacer()
+                }
+                .padding(.top, geometry.safeAreaInsets.top + 15)
+                .opacity(animationProgress)
             }
         }
         .contentShape(Rectangle())
