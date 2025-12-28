@@ -144,18 +144,25 @@ struct FolderOverlayView: View {
                     }
                     .scrollClipDisabled()
 
-                // Header overlay - floats on top
-                VStack {
-                    HStack {
-                        Text(folder.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, geometry.safeAreaInsets.top + 16)
-                    .padding(.bottom, 8)
-                    .background(.ultraThinMaterial.opacity(animationProgress))
+                // Header overlay - floats on top with feathered bottom
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .frame(height: geometry.safeAreaInsets.top + 70)
+                        .mask(
+                            LinearGradient(
+                                colors: [.black, .black, .black.opacity(0)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .overlay(alignment: .bottomLeading) {
+                            Text(folder.name)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 20)
+                        }
 
                     Spacer()
                 }
