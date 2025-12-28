@@ -37,19 +37,13 @@ struct FolderOverlayView: View {
     }
 
     private func headerHeight(in geometry: GeometryProxy) -> CGFloat {
-        geometry.safeAreaInsets.top + 60
+        74 // Fixed height - title + small gap
     }
 
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Solid background to hide underlying UI (search bar, etc)
-                Rectangle()
-                    .fill(Color(.systemBackground))
-                    .opacity(animationProgress * 0.95)
-                    .ignoresSafeArea()
-
-                // Blur background on top
+                // Blur background
                 Rectangle()
                     .fill(.ultraThinMaterial)
                     .opacity(animationProgress)
@@ -149,6 +143,8 @@ struct FolderOverlayView: View {
                         .padding(.bottom, 100)
                     }
                     .scrollClipDisabled()
+                    .scrollIndicators(.hidden)
+                    .contentMargins(.top, 0, for: .scrollContent)
 
                 // Header blur - feathered bottom, more opaque to hide underlying UI
                 Rectangle()
@@ -169,18 +165,20 @@ struct FolderOverlayView: View {
                     .ignoresSafeArea()
                     .opacity(animationProgress)
 
-                // Header title - aligned with settings button
-                VStack {
-                    Text(folder.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20)
-                    Spacer()
-                }
-                .padding(.top, geometry.safeAreaInsets.top + 15)
-                .opacity(animationProgress)
             }
+        }
+        .overlay(alignment: .top) {
+            // Header title - at very top
+            HStack {
+                Text(folder.name)
+                    .font(.title)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .allowsHitTesting(false)
+            .opacity(animationProgress)
         }
         .contentShape(Rectangle())
         .onTapGesture {
