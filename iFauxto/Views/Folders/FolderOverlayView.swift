@@ -36,32 +36,22 @@ struct FolderOverlayView: View {
         folder.safeSubfolders.sorted { $0.sortOrder < $1.sortOrder }
     }
 
+    private func headerHeight(in geometry: GeometryProxy) -> CGFloat {
+        geometry.safeAreaInsets.top + 60
+    }
+
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .top) {
                 // Blur background
                 Rectangle()
                     .fill(.ultraThinMaterial)
                     .opacity(animationProgress)
                     .ignoresSafeArea()
 
-                // Content
-                VStack(spacing: 0) {
-                    // Header with folder name
-                    HStack {
-                        Text(folder.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, geometry.safeAreaInsets.top + 16)
-                    .padding(.bottom, 16)
-                    .opacity(animationProgress)
-
-                    // Grid of items
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 8) {
+                // Scrollable content - extends full screen, content starts below header
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 8) {
                             // Subfolders first
                             ForEach(Array(sortedSubfolders.enumerated()), id: \.element.id) { index, subfolder in
                                 let targetPosition = gridPosition(for: index, in: geometry)
@@ -148,10 +138,28 @@ struct FolderOverlayView: View {
                                 }
                             }
                         }
+                        .padding(.top, headerHeight(in: geometry))
                         .padding(.horizontal, 20)
                         .padding(.bottom, 100)
                     }
+                    .scrollClipDisabled()
+
+                // Header overlay - floats on top
+                VStack {
+                    HStack {
+                        Text(folder.name)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, geometry.safeAreaInsets.top + 16)
+                    .padding(.bottom, 8)
+                    .background(.ultraThinMaterial.opacity(animationProgress))
+
+                    Spacer()
                 }
+                .opacity(animationProgress)
             }
         }
         .contentShape(Rectangle())
@@ -199,7 +207,7 @@ struct FolderOverlayView: View {
         let row = index / columnsCount
 
         let x = padding + (CGFloat(col) * (itemWidth + spacing)) + (itemWidth / 2)
-        let y = 140 + (CGFloat(row) * (itemWidth + spacing)) + (itemWidth / 2)
+        let y = headerHeight(in: geometry) + (CGFloat(row) * (itemWidth + spacing)) + (itemWidth / 2)
 
         return CGPoint(x: x, y: y)
     }
