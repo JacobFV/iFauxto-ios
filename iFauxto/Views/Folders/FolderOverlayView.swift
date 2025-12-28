@@ -21,6 +21,7 @@ struct FolderOverlayView: View {
     @State private var hoveredDropZone: FolderPhotoDropZone = .none
     @State private var pendingSubfolderPhotoIds: [String] = []
     @State private var showingCreateSubfolderSheet = false
+    @State private var showingPhotoPicker = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 8),
@@ -51,6 +52,34 @@ struct FolderOverlayView: View {
 
                 // Scrollable content - extends full screen, content starts below header
                 ScrollView {
+                    if sortedAssets.isEmpty && sortedSubfolders.isEmpty {
+                        // Empty state
+                        VStack(spacing: 16) {
+                            Spacer(minLength: 100)
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.system(size: 50))
+                                .foregroundStyle(.secondary)
+                            Text("No photos yet")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                            Button {
+                                showingPhotoPicker = true
+                            } label: {
+                                Label("Add Photos", systemImage: "plus")
+                                    .font(.headline)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 12)
+                                    .background(.blue)
+                                    .foregroundStyle(.white)
+                                    .clipShape(Capsule())
+                            }
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, headerHeight(in: geometry))
+                        .opacity(animationProgress)
+                    }
+
                     LazyVGrid(columns: columns, spacing: 8) {
                             // Subfolders first
                             ForEach(Array(sortedSubfolders.enumerated()), id: \.element.id) { index, subfolder in
@@ -174,10 +203,16 @@ struct FolderOverlayView: View {
                     .font(.title)
                     .fontWeight(.bold)
                 Spacer()
+                Button {
+                    showingPhotoPicker = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.blue)
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            .allowsHitTesting(false)
             .opacity(animationProgress)
         }
         .contentShape(Rectangle())
@@ -191,6 +226,11 @@ struct FolderOverlayView: View {
         }
         .sheet(item: $selectedAsset) { asset in
             PhotoDetailView(asset: asset, folder: folder)
+        }
+        .sheet(isPresented: $showingPhotoPicker) {
+            PhotoPickerView { identifiers in
+                addPhotos(identifiers: identifiers)
+            }
         }
         .fullScreenCover(isPresented: $showingCreateSubfolderSheet) {
             FolderEditSheet(mode: .create) { name in
@@ -241,6 +281,22 @@ struct FolderOverlayView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             isPresented = false
         }
+    }
+
+    private func addPhotos(identifiers: [String]) {
+        let maxSortOrder = folder.safeAssets.map(\.sortOrder).max() ?? -1
+
+        for (index, identifier) in identifiers.enumerated() {
+            let existing = folder.safeAssets.first { $0.assetIdentifier == identifier }
+            if existing == nil {
+                let asset = FolderAsset(assetIdentifier: identifier, sortOrder: maxSortOrder + index + 1)
+                asset.folder = folder
+                modelContext.insert(asset)
+            }
+        }
+
+        folder.updatedAt = Date()
+        triggerHaptic()
     }
 
     private func reorderAssetLive(source: FolderAsset, target: FolderAsset, insertBefore: Bool) {
