@@ -5,6 +5,11 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>processing</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>iFauxto needs access to your photos so you can organize them YOUR way. We won't judge, rearrange, or create 47 albums you didn't ask for.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>iFauxto needs to save your beautifully edited photos. Don't worry, we put them exactly where you expect.</string>
 </dict>
 </plist>

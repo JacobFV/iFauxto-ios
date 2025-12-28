@@ -1,10 +1,3 @@
-//
-//  iFauxtoApp.swift
-//  iFauxto
-//
-//  Created by Jacob Valdez on 12/28/25.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -12,9 +5,17 @@ import SwiftData
 struct iFauxtoApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Folder.self,
+            FolderAsset.self,
+            AssetTag.self,
+            UserPreferences.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .automatic
+        )
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -25,8 +26,27 @@ struct iFauxtoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .onAppear {
+                    ensureUserPreferencesExist()
+                }
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    private func ensureUserPreferencesExist() {
+        let context = sharedModelContainer.mainContext
+        let descriptor = FetchDescriptor<UserPreferences>()
+
+        do {
+            let existing = try context.fetch(descriptor)
+            if existing.isEmpty {
+                let preferences = UserPreferences()
+                context.insert(preferences)
+                try context.save()
+            }
+        } catch {
+            print("Failed to ensure UserPreferences: \(error)")
+        }
     }
 }
