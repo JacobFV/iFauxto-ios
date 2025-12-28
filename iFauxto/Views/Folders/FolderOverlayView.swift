@@ -148,10 +148,14 @@ struct FolderOverlayView: View {
                 VStack(spacing: 0) {
                     Rectangle()
                         .fill(.ultraThinMaterial)
-                        .frame(height: geometry.safeAreaInsets.top + 70)
+                        .frame(height: geometry.safeAreaInsets.top + 200)
                         .mask(
                             LinearGradient(
-                                colors: [.black, .black, .black.opacity(0)],
+                                stops: [
+                                    .init(color: .black, location: 0),
+                                    .init(color: .black, location: 0.3),
+                                    .init(color: .black.opacity(0), location: 1.0)
+                                ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
