@@ -38,6 +38,19 @@ final class Folder {
     var safeSubfolders: [Folder] {
         subfolders ?? []
     }
+
+    /// All asset identifiers from this folder and all nested subfolders (for preview stacks)
+    var allAssetIdentifiers: [String] {
+        var identifiers: [String] = safeAssets
+            .sorted { $0.sortOrder < $1.sortOrder }
+            .map(\.assetIdentifier)
+
+        for subfolder in safeSubfolders.sorted(by: { $0.sortOrder < $1.sortOrder }) {
+            identifiers.append(contentsOf: subfolder.allAssetIdentifiers)
+        }
+
+        return identifiers
+    }
 }
 
 enum FolderSortOption: String, CaseIterable, Identifiable {

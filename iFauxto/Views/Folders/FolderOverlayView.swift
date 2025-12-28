@@ -390,11 +390,11 @@ struct SubfolderStackCard: View {
     }
 
     private func loadImages() async {
-        let assets = folder.safeAssets.prefix(3)
+        let identifiers = folder.allAssetIdentifiers.prefix(3)
         var loaded: [UIImage] = []
 
-        for folderAsset in assets {
-            if let asset = photoService.fetchAsset(identifier: folderAsset.assetIdentifier),
+        for identifier in identifiers {
+            if let asset = photoService.fetchAsset(identifier: identifier),
                let image = await photoService.thumbnail(for: asset, size: CGSize(width: 150, height: 150)) {
                 loaded.append(image)
             }

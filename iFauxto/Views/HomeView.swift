@@ -730,11 +730,11 @@ struct FolderCard: View {
     }
 
     private func loadStackImages() async {
-        let assets = folder.safeAssets.sorted { $0.sortOrder < $1.sortOrder }.prefix(3)
+        let identifiers = folder.allAssetIdentifiers.prefix(3)
         var images: [UIImage] = []
 
-        for folderAsset in assets {
-            if let asset = photoService.fetchAsset(identifier: folderAsset.assetIdentifier),
+        for identifier in identifiers {
+            if let asset = photoService.fetchAsset(identifier: identifier),
                let image = await photoService.thumbnail(for: asset, size: CGSize(width: 200, height: 200)) {
                 images.append(image)
             }
@@ -829,11 +829,11 @@ struct FavoriteFolderCard: View {
     }
 
     private func loadStackImages() async {
-        let assets = folder.safeAssets.sorted { $0.sortOrder < $1.sortOrder }.prefix(3)
+        let identifiers = folder.allAssetIdentifiers.prefix(3)
         var images: [UIImage] = []
 
-        for folderAsset in assets {
-            if let asset = photoService.fetchAsset(identifier: folderAsset.assetIdentifier),
+        for identifier in identifiers {
+            if let asset = photoService.fetchAsset(identifier: identifier),
                let image = await photoService.thumbnail(for: asset, size: CGSize(width: 200, height: 200)) {
                 images.append(image)
             }
